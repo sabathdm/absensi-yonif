@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Absensi KH YONIF 201</title>
+<style>
+  :root {
+    --navy:#0a1628;--blue:#1a4a8a;--blue-mid:#1e5fba;--blue-light:#3a8fd4;
+    --aqua:#00b4d8;--aqua-light:#90e0ef;--surface:#f0f6ff;--card:#ffffff;
+    --border:#d0e4f7;--text:#0d1f3c;--text-muted:#5a7a9a;
+    --green:#16a34a;--green-light:#dcfce7;--red:#dc2626;--red-light:#fee2e2;
+    --amber:#d97706;--purple:#7c3aed;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--surface);color:var(--text);min-height:100vh;}
+
+  /* HEADER */
+  .app-header{background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 60%,var(--blue-light) 100%);padding:16px 24px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(10,22,40,.3);flex-wrap:wrap;}
+  .header-logo{width:48px;height:48px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(255,255,255,.2);flex-shrink:0;}
+  .header-text h1{color:#fff;font-size:1.2rem;font-weight:700;}
+  .header-text p{color:var(--aqua-light);font-size:0.78rem;margin-top:2px;}
+  .header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .month-select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:7px 12px;border-radius:8px;font-size:0.83rem;cursor:pointer;}
+  .month-select option{background:var(--navy);color:#fff;}
+  .date-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 12px;border-radius:8px;font-size:0.78rem;}
+
+  /* GOOGLE STATUS */
+  #gStatusBar{padding:8px 24px;font-size:0.78rem;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+  #gStatusBar.disconnected{background:#fef3c7;color:#92400e;}
+  #gStatusBar.connected{background:#f0fdf4;color:#166534;}
+  #gStatusBar.syncing{background:#eff6ff;color:#1d4ed8;}
+  #gStatusBar.error{background:#fee2e2;color:#991b1b;}
+  .btn-glogin{background:linear-gradient(135deg,#4285f4,#1a73e8);color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:0.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .btn-glogin:hover{opacity:.88;}
+  .btn-glogout{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.3);padding:5px 10px;border-radius:6px;font-size:0.76rem;font-weight:600;cursor:pointer;}
+  .sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .dot-ok{background:#16a34a;}.dot-warn{background:#d97706;}.dot-err{background:#dc2626;}.dot-sync{background:#3b82f6;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  /* NAV */
+  .nav-tabs{background:var(--card);border-bottom:2px solid var(--border);display:flex;padding:0 24px;overflow-x:auto;}
+  .nav-tab{padding:13px 18px;font-size:0.84rem;font-weight:600;color:var(--text-muted);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s;}
+  .nav-tab:hover{color:var(--blue-mid);}
+  .nav-tab.active{color:var(--blue-mid);border-bottom-color:var(--blue-mid);}
+
+  /* MAIN */
+  .main{padding:18px 24px;max-width:1200px;margin:0 auto;}
+
+  /* STATS */
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px;}
+  .stat-card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+  .stat-num{font-size:1.9rem;font-weight:800;line-height:1;}
+  .stat-label{font-size:0.72rem;color:var(--text-muted);margin-top:4px;font-weight:500;}
+  .c-blue{color:var(--blue-mid);}.c-green{color:var(--green);}.c-red{color:var(--red);}.c-amber{color:var(--amber);}.c-purple{color:var(--purple);}
+
+  /* FILTER */
+  .filter-bar{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:12px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .filter-bar label{font-size:0.78rem;font-weight:600;color:var(--text-muted);}
+  .f-select,.f-input{border:1.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:0.83rem;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s;}
+  .f-select:focus,.f-input:focus{border-color:var(--blue-light);}
+  .f-input{flex:1;min-width:170px;}
+  .day-inp{width:72px;}
+
+  /* TABLE */
+  .table-wrap{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+  .table-head{padding:13px 16px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:space-between;}
+  .table-head h2{color:#fff;font-size:0.92rem;font-weight:700;}
+  .table-head span{color:var(--aqua-light);font-size:0.78rem;}
+  .table-scroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:0.83rem;}
+  thead tr{background:#f0f6ff;}
+  thead th{padding:9px 11px;text-align:left;font-size:0.73rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);white-space:nowrap;}
+  th.c,td.c{text-align:center;}
+  tbody tr{border-bottom:1px solid #edf4ff;transition:background .15s;}
+  tbody tr:hover{background:#f7faff;}
+  tbody td{padding:9px 11px;vertical-align:middle;}
+
+  .bk{display:inline-block;padding:3px 9px;border-radius:20px;font-size:0.7rem;font-weight:700;}
+  .bk-A{background:#dbeafe;color:#1d4ed8;}.bk-B{background:#d1fae5;color:#065f46;}
+  .bk-C{background:#fef3c7;color:#92400e;}.bk-D{background:#ede9fe;color:#5b21b6;}
+
+  /* ATT BUTTONS */
+  .att-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:2px solid #d1d5db;background:#f9fafb;cursor:pointer;font-size:0.68rem;font-weight:700;transition:all .15s;color:#6b7280;}
+  .att-btn:hover{transform:scale(1.12);}
+  .att-btn.hadir{background:var(--green);border-color:var(--green);color:#fff;}
+  .att-btn.izin{background:var(--amber);border-color:var(--amber);color:#fff;}
+  .att-btn.sakit{background:var(--purple);border-color:var(--purple);color:#fff;}
+  .att-btn.alpa{background:var(--red);border-color:var(--red);color:#fff;}
+  .total-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:0.76rem;font-weight:700;background:var(--green-light);color:var(--green);}
+
+  /* LEGEND */
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:0.76rem;color:var(--text-muted);}
+  .ldot{width:11px;height:11px;border-radius:50%;}
+
+  /* REKAP */
+  .rekap-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+  @media(max-width:640px){.rekap-grid{grid-template-columns:1fr;}}
+  .rekap-card{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+  .rkh{padding:11px 15px;font-size:0.83rem;font-weight:700;color:#fff;}
+  .rkh.blue{background:linear-gradient(90deg,var(--blue),var(--blue-light));}
+  .rkh.aqua{background:linear-gradient(90deg,#0077b6,var(--aqua));}
+  .rk-row{display:flex;justify-content:space-between;align-items:center;padding:9px 15px;border-bottom:1px solid #edf4ff;font-size:0.83rem;}
+  .rk-row:last-child{border-bottom:none;}
+  .rk-row .rn{font-weight:600;}
+  .rk-row .rv{font-weight:800;color:var(--blue-mid);font-size:.95rem;}
+  .pb-bg{background:#e5e7eb;border-radius:4px;height:4px;overflow:hidden;margin-top:4px;}
+  .pb-fill{height:100%;border-radius:4px;transition:width .3s;}
+
+  /* CHART */
+  .chart-sec{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+  .chart-sec h3{font-size:0.88rem;font-weight:700;margin-bottom:12px;color:var(--navy);}
+  .chart-bars{display:flex;align-items:flex-end;gap:8px;height:90px;}
+  .cb-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .cb{width:100%;border-radius:5px 5px 0 0;transition:height .4s;min-height:4px;}
+  .cb-label{font-size:0.68rem;color:var(--text-muted);font-weight:600;}
+  .cb-val{font-size:0.7rem;font-weight:700;color:var(--text);}
+
+  /* FORM */
+  .form-card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:18px;}
+  .form-card h3{font-size:0.92rem;font-weight:700;margin-bottom:12px;color:var(--navy);}
+  .form-row{display:flex;gap:9px;flex-wrap:wrap;}
+  .form-inp{flex:1;min-width:140px;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.83rem;outline:none;transition:border-color .2s;background:var(--surface);}
+  .form-inp:focus{border-color:var(--blue-light);}
+  .btn-primary{background:linear-gradient(135deg,var(--blue-mid),var(--blue-light));color:#fff;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:0.83rem;cursor:pointer;transition:opacity .2s;white-space:nowrap;}
+  .btn-primary:hover{opacity:.88;}
+  .btn-danger{background:none;border:none;color:#9ca3af;cursor:pointer;padding:4px;border-radius:6px;transition:all .15s;display:flex;align-items:center;}
+  .btn-danger:hover{color:var(--red);background:var(--red-light);}
+
+  /* PELATIH */
+  .pelatih-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:11px;}
+  .pelatih-card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:14px;display:flex;align-items:center;gap:11px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+  .p-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue-mid),var(--aqua));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.95rem;flex-shrink:0;}
+  .p-name{font-weight:700;font-size:0.88rem;}
+  .p-sub{font-size:0.73rem;color:var(--text-muted);margin-top:2px;}
+
+  /* MISC */
+  .empty-state{text-align:center;padding:36px;color:var(--text-muted);font-size:0.88rem;}
+  .empty-state .icon{font-size:2.2rem;margin-bottom:7px;}
+  .toast{position:fixed;bottom:22px;right:22px;color:#fff;padding:11px 18px;border-radius:10px;font-size:0.83rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  @media(max-width:600px){.main{padding:12px 10px;}.app-header{padding:12px 14px;}.nav-tab{padding:11px 13px;font-size:0.79rem;}}
+
+  /* MODAL LOADING */
+  .overlay{position:fixed;inset:0;background:rgba(10,22,40,.6);display:flex;align-items:center;justify-content:center;z-index:9999;}
+  .modal-box{background:#fff;border-radius:18px;padding:32px 28px;text-align:center;max-width:320px;width:90%;}
+  .modal-box h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--navy);}
+  .modal-box p{font-size:0.83rem;color:var(--text-muted);line-height:1.5;}
+  .spinner{width:42px;height:42px;border:4px solid #e5e7eb;border-top-color:var(--blue-mid);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="header-logo">🏊</div>
+  <div class="header-text">
+    <h1>KH YONIF 201</h1>
+    <p>Sistem Absensi Klub Renang</p>
+  </div>
+  <div class="header-right">
+    <select class="month-select" id="monthSelect" onchange="changeMonth(this.value)">
+      <option value="Januari">Januari</option><option value="Februari">Februari</option>
+      <option value="Maret">Maret</option><option value="April">April</option>
+      <option value="Mei" selected>Mei</option><option value="Juni">Juni</option>
+      <option value="Juli">Juli</option><option value="Agustus">Agustus</option>
+      <option value="September">September</option><option value="Oktober">Oktober</option>
+      <option value="November">November</option><option value="Desember">Desember</option>
+    </select>
+    <div class="date-badge" id="todayBadge"></div>
+  </div>
+</div>
+
+<!-- GOOGLE STATUS BAR -->
+<div id="gStatusBar" class="disconnected">
+  <div class="sync-dot dot-warn"></div>
+  <span id="gStatusText">Belum terhubung ke Google Sheets</span>
+  <button class="btn-glogin" id="btnLogin" onclick="handleLogin()">
+    <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    Login Google
+  </button>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showTab('absensi')">📋 Absensi</button>
+  <button class="nav-tab" onclick="showTab('rekap')">📊 Rekap</button>
+  <button class="nav-tab" onclick="showTab('siswa')">👤 Data Siswa</button>
+  <button class="nav-tab" onclick="showTab('pelatih')">🏅 Data Pelatih</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TAB ABSENSI -->
+  <div id="tab-absensi">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="ldot" style="background:var(--green)"></div>Hadir</div>
+      <div class="legend-item"><div class="ldot" style="background:var(--amber)"></div>Izin</div>
+      <div class="legend-item"><div class="ldot" style="background:var(--purple)"></div>Sakit</div>
+      <div class="legend-item"><div class="ldot" style="background:var(--red)"></div>Alpa</div>
+      <div class="legend-item"><div class="ldot" style="background:#d1d5db"></div>Belum diisi</div>
+    </div>
+    <div class="filter-bar">
+      <label>Kelas</label>
+      <select class="f-select" id="filterKelas" onchange="renderAbsensi()">
+        <option value="semua">Semua Kelas</option>
+        <option value="A">Kelas A</option><option value="B">Kelas B</option>
+        <option value="C">Kelas C</option><option value="D">Kelas D</option>
+      </select>
+      <label>Tanggal</label>
+      <input type="number" class="f-select day-inp" id="dayInput" min="1" max="31" placeholder="Tgl" oninput="renderAbsensi()"/>
+      <input type="text" class="f-input" placeholder="🔍 Cari nama siswa..." id="searchInput" oninput="renderAbsensi()"/>
+    </div>
+    <div class="table-wrap">
+      <div class="table-head">
+        <h2>Daftar Absensi</h2>
+        <span id="absensiSubtitle"></span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th style="width:38px">No</th><th>Nama Siswa</th>
+            <th class="c" style="width:65px">Kelas</th>
+            <th class="c" style="width:175px">Status Kehadiran</th>
+            <th class="c" style="width:95px">Total Hadir</th>
+          </tr></thead>
+          <tbody id="absensiBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB REKAP -->
+  <div id="tab-rekap" style="display:none">
+    <div class="rekap-grid">
+      <div class="rekap-card"><div class="rkh blue">📊 Rekap Per Kelas</div><div id="rekapKelasBody"></div></div>
+      <div class="rekap-card"><div class="rkh aqua">🏅 Top 5 Siswa Rajin</div><div id="rekapTopSiswa"></div></div>
+    </div>
+    <div class="chart-sec"><h3>Grafik Kehadiran Per Kelas</h3><div class="chart-bars" id="chartBars"></div></div>
+  </div>
+
+  <!-- TAB SISWA -->
+  <div id="tab-siswa" style="display:none">
+    <div class="form-card">
+      <h3>Tambah Siswa Baru</h3>
+      <div class="form-row">
+        <input type="text" class="form-inp" id="newNamaDepan" placeholder="Nama depan*"/>
+        <input type="text" class="form-inp" id="newNamaTengah" placeholder="Nama tengah"/>
+        <input type="text" class="form-inp" id="newNamaBelakang" placeholder="Nama belakang"/>
+        <select class="form-inp" id="newKelas" style="max-width:110px">
+          <option value="">Kelas*</option>
+          <option value="A">A</option><option value="B">B</option>
+          <option value="C">C</option><option value="D">D</option>
+        </select>
+        <button class="btn-primary" onclick="tambahSiswa()">+ Tambah</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <label>Kelas</label>
+      <select class="f-select" id="filterKelasS" onchange="renderSiswa()">
+        <option value="semua">Semua</option>
+        <option value="A">A</option><option value="B">B</option>
+        <option value="C">C</option><option value="D">D</option>
+      </select>
+      <input type="text" class="f-input" placeholder="🔍 Cari nama..." id="searchS" oninput="renderSiswa()"/>
+    </div>
+    <div class="table-wrap">
+      <div class="table-head"><h2>Data Siswa</h2><span id="siswaCount"></span></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th style="width:38px">No</th><th>Nama Lengkap</th>
+            <th class="c">Kelas</th><th class="c">Usia</th>
+            <th class="c">Kota</th><th class="c">Total Hadir</th><th class="c">Aksi</th>
+          </tr></thead>
+          <tbody id="siswaBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB PELATIH -->
+  <div id="tab-pelatih" style="display:none">
+    <div class="form-card">
+      <h3>Tambah Pelatih Baru</h3>
+      <div class="form-row">
+        <input type="text" class="form-inp" id="newPelatihNama" placeholder="Nama pelatih*"/>
+        <input type="text" class="form-inp" id="newPelatihKelas" placeholder="Kelas yang diajar"/>
+        <input type="text" class="form-inp" id="newPelatihSertif" placeholder="Sertifikasi"/>
+        <button class="btn-primary" onclick="tambahPelatih()">+ Tambah</button>
+      </div>
+    </div>
+    <div class="pelatih-grid" id="pelatihGrid"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOADING OVERLAY -->
+<div class="overlay" id="overlay" style="display:none">
+  <div class="modal-box">
+    <div class="spinner"></div>
+    <h3 id="overlayTitle">Menyinkronkan data...</h3>
+    <p id="overlayMsg">Mohon tunggu sebentar</p>
+  </div>
+</div>
+
+<!-- Google API -->
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const CLIENT_ID   = '838673854032-fbr68r4ne5dqbqj4tc5prq3r4si1d94t.apps.googleusercontent.com';
+const SHEET_ID    = '1EouV7R7EqeWDIcMB3GBo6kI62FLzcraFBIubScjnygU';
+const SCOPES      = 'https://www.googleapis.com/auth/spreadsheets';
+const SHEET_NAMES = { siswa:'Siswa', pelatih:'Pelatih', attendance:'Absensi' };
+
+// ============================================================
+// STATE
+// ============================================================
+const LS = {
+  siswa:'y201_siswa', pelatih:'y201_pelatih',
+  attendance:'y201_att', bulan:'y201_bulan', token:'y201_token'
+};
+
+function lsGet(k,fb){ try{ const r=localStorage.getItem(k); return r?JSON.parse(r):fb; }catch{return fb;} }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+const DEFAULT_SISWA = [
+  {id:1,namaDepan:'ABRISAM',namaTengah:'RAFA',namaBelakang:'NAUFAL',kelas:'A',usia:15,kota:'Depok'},
+  {id:2,namaDepan:'ALKA',namaTengah:'',namaBelakang:'DEVDAN',kelas:'A',usia:12,kota:'Jakarta Timur'},
+  {id:3,namaDepan:'AQHAR',namaTengah:'NIZAMA',namaBelakang:'RIDWAN',kelas:'A',usia:14,kota:'Jakarta Timur'},
+  {id:4,namaDepan:'AS NADA',namaTengah:'RAMADHANI',namaBelakang:'DERYANTO',kelas:'A',usia:11,kota:'Jakarta Timur'},
+  {id:5,namaDepan:'AZURA',namaTengah:'KASYAFA',namaBelakang:'ASHARY',kelas:'A',usia:12,kota:'Depok'},
+  {id:6,namaDepan:'DHAFITHA',namaTengah:'NIZZA',namaBelakang:'NUR ALISMA',kelas:'A',usia:11,kota:'Jakarta Timur'},
+  {id:7,namaDepan:'DIRGA',namaTengah:'',namaBelakang:'SYAEFUDDIN',kelas:'A',usia:13,kota:'Jakarta Timur'},
+  {id:8,namaDepan:'FILZAH',namaTengah:'ALFI',namaBelakang:'HUSNA',kelas:'A',usia:11,kota:'Jakarta Timur'},
+  {id:9,namaDepan:'HINATA',namaTengah:'NEIRAZEEGY',namaBelakang:'DURIAMIKA',kelas:'A',usia:12,kota:'Depok'},
+  {id:10,namaDepan:'HYRA',namaTengah:'QUINZHA',namaBelakang:'AYUNINA',kelas:'A',usia:12,kota:'Depok'},
+  {id:11,namaDepan:'INDRA',namaTengah:'',namaBelakang:'MAHARDIKA',kelas:'A',usia:14,kota:'Depok'},
+  {id:12,namaDepan:'SAMUEL',namaTengah:'CHRISTIAN',namaBelakang:'PIRADE',kelas:'A',usia:15,kota:'Depok'},
+  {id:13,namaDepan:'KENICHI',namaTengah:'NEOROHZEYN',namaBelakang:'DURIAT',kelas:'A',usia:13,kota:''},
+  {id:14,namaDepan:'AHMAD',namaTengah:'FARREL',namaBelakang:'SYABANIAH',kelas:'B',usia:10,kota:'Jakarta Timur'},
+  {id:15,namaDepan:'ALDRIN',namaTengah:'GIANDRA',namaBelakang:'RAFAEYZA',kelas:'B',usia:7,kota:'Depok'},
+  {id:16,namaDepan:'ALEXANDRA',namaTengah:'MAHESWARI AYUNINGTIYAS',namaBelakang:'NUGROHO',kelas:'B',usia:13,kota:'Jakarta Timur'},
+  {id:17,namaDepan:'ALIEF',namaTengah:'RAFI',namaBelakang:'ZAFRAN',kelas:'B',usia:13,kota:'Depok'},
+  {id:18,namaDepan:'AN ZANY',namaTengah:'AYUNDA',namaBelakang:'DERYANTO',kelas:'B',usia:7,kota:'Jakarta Timur'},
+  {id:19,namaDepan:'ANDI',namaTengah:'GHAZY',namaBelakang:'ALHAQQU RAHMAN',kelas:'C',usia:13,kota:''},
+  {id:20,namaDepan:'ANDI',namaTengah:'ALZEENA',namaBelakang:'SHAKILA RAHMAN',kelas:'C',usia:12,kota:''},
+  {id:21,namaDepan:'ACHMAD',namaTengah:'PRINCE',namaBelakang:'MIKHAIL',kelas:'C',usia:15,kota:''},
+  {id:22,namaDepan:'IBNU',namaTengah:'FAIZ',namaBelakang:'IBTISAN',kelas:'C',usia:15,kota:''},
+  {id:23,namaDepan:'DESAK',namaTengah:'NAYLA',namaBelakang:'ZALIKA ALBA',kelas:'C',usia:9,kota:''},
+  {id:24,namaDepan:'KEENAN',namaTengah:'',namaBelakang:'',kelas:'C',usia:null,kota:''},
+  {id:25,namaDepan:'KAIF',namaTengah:'',namaBelakang:'',kelas:'C',usia:null,kota:''},
+  {id:26,namaDepan:'FINNA',namaTengah:'',namaBelakang:'',kelas:'C',usia:null,kota:''},
+  {id:27,namaDepan:'KENZO',namaTengah:'',namaBelakang:'',kelas:'C',usia:null,kota:''},
+  {id:28,namaDepan:'VEREN',namaTengah:'',namaBelakang:'',kelas:'C',usia:null,kota:''},
+  {id:29,namaDepan:'MUHAMMAD',namaTengah:'AQSHO',namaBelakang:'KENWARD',kelas:'C',usia:null,kota:''},
+  {id:30,namaDepan:'ALTHAF',namaTengah:'FATHIR',namaBelakang:'APRILIO SUSILO',kelas:'D',usia:13,kota:''},
+  {id:31,namaDepan:'BILAL',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:32,namaDepan:'ARSYAD',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:33,namaDepan:'SAMUEL',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:34,namaDepan:'VANIA',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:35,namaDepan:'SKOLASTIKA',namaTengah:'YEMIMA',namaBelakang:'PUTRI',kelas:'D',usia:7,kota:''},
+  {id:36,namaDepan:'DEWA',namaTengah:'RAFANZA',namaBelakang:'MUHAMMAD ALBA',kelas:'D',usia:6,kota:''},
+  {id:37,namaDepan:'FAZIA',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:38,namaDepan:'AUREL',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:39,namaDepan:'LITO',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:40,namaDepan:'FASYA',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:41,namaDepan:'FARIQ',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+  {id:42,namaDepan:'DEANAYRA',namaTengah:'QUENNA',namaBelakang:'ALMIRA',kelas:'D',usia:7,kota:''},
+  {id:43,namaDepan:'JUNO',namaTengah:'',namaBelakang:'',kelas:'D',usia:null,kota:''},
+];
+const DEFAULT_PELATIH = [
+  {id:1,nama:'Prakash',kelas:'A',sertifikasi:''},{id:2,nama:'Afano',kelas:'A, B, D',sertifikasi:''},
+  {id:3,nama:'Nanda',kelas:'C, D',sertifikasi:''},{id:4,nama:'Alif',kelas:'',sertifikasi:''},
+  {id:5,nama:'Bintang',kelas:'C, D',sertifikasi:''},{id:6,nama:'RIko',kelas:'',sertifikasi:''},
+  {id:7,nama:'Doni',kelas:'',sertifikasi:''},{id:8,nama:'Rara',kelas:'D',sertifikasi:''},
+  {id:9,nama:'Bowo',kelas:'',sertifikasi:''},{id:10,nama:'Sarah',kelas:'',sertifikasi:''},
+  {id:11,nama:'Kaken',kelas:'',sertifikasi:''},{id:12,nama:'Septi',kelas:'D',sertifikasi:''},
+];
+
+let siswa      = lsGet(LS.siswa, DEFAULT_SISWA);
+let pelatih    = lsGet(LS.pelatih, DEFAULT_PELATIH);
+let attendance = lsGet(LS.attendance, {});
+let currentBulan = lsGet(LS.bulan, 'Mei');
+
+let tokenClient = null;
+let isSignedIn  = false;
+let syncQueue   = [];
+let syncTimer   = null;
+
+// ============================================================
+// GOOGLE AUTH
+// ============================================================
+function gapiLoaded() {
+  gapi.load('client', async () => {
+    await gapi.client.init({ discoveryDocs:['https://sheets.googleapis.com/$discovery/rest?version=v4'] });
+    initTokenClient();
+  });
+}
+
+function initTokenClient() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { setStatus('error','Login gagal: '+resp.error); return; }
+      isSignedIn = true;
+      lsSet(LS.token, gapi.client.getToken());
+      setStatus('syncing','Terhubung, memuat data dari Google Sheets...');
+      await ensureSheets();
+      await pullFromSheets();
+      setStatus('connected','Terhubung ke Google Sheets');
+      showToast('Berhasil login dan data dimuat!','ok');
+      renderAll();
+    }
+  });
+
+  // Coba restore token yang tersimpan
+  const saved = lsGet(LS.token, null);
+  if (saved && saved.access_token) {
+    gapi.client.setToken(saved);
+    isSignedIn = true;
+    setStatus('connected','Terhubung ke Google Sheets');
+    ensureSheets().then(() => pullFromSheets()).then(() => {
+      renderAll();
+      showToast('Data dimuat dari Google Sheets','ok');
+    }).catch(() => {
+      isSignedIn = false;
+      setStatus('disconnected','Sesi habis, silakan login ulang');
+      gapi.client.setToken(null);
+    });
+  }
+}
+
+function handleLogin() {
+  if (!tokenClient) { showToast('API belum siap, coba lagi sebentar'); return; }
+  tokenClient.requestAccessToken({ prompt:'' });
+}
+
+function handleLogout() {
+  const token = gapi.client.getToken();
+  if (token) google.accounts.oauth2.revoke(token.access_token, ()=>{});
+  gapi.client.setToken(null);
+  lsSet(LS.token, null);
+  isSignedIn = false;
+  setStatus('disconnected','Belum terhubung ke Google Sheets');
+  showToast('Logout berhasil');
+}
+
+function setStatus(type, msg) {
+  const bar  = document.getElementById('gStatusBar');
+  const text = document.getElementById('gStatusText');
+  const btn  = document.getElementById('btnLogin');
+  bar.className = type;
+  text.textContent = msg;
+  const dotClass = {connected:'dot-ok',disconnected:'dot-warn',syncing:'dot-sync',error:'dot-err'}[type]||'dot-warn';
+  bar.querySelector('.sync-dot').className = 'sync-dot '+dotClass;
+
+  if (type === 'connected') {
+    btn.outerHTML = `<button class="btn-glogout" onclick="handleLogout()">Logout</button>`;
+  } else if (type !== 'syncing') {
+    const existing = document.getElementById('btnLogin');
+    if (!existing) {
+      const newBtn = document.createElement('button');
+      newBtn.className='btn-glogin'; newBtn.id='btnLogin'; newBtn.onclick=handleLogin;
+      newBtn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Login Google';
+      document.getElementById('gStatusBar').appendChild(newBtn);
+    }
+  }
+}
+
+// ============================================================
+// GOOGLE SHEETS OPERATIONS
+// ============================================================
+async function sheetsGet(range) {
+  const r = await gapi.client.sheets.spreadsheets.values.get({ spreadsheetId:SHEET_ID, range });
+  return r.result.values || [];
+}
+
+async function sheetsUpdate(range, values) {
+  await gapi.client.sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID, range,
+    valueInputOption: 'RAW',
+    resource: { values }
+  });
+}
+
+async function sheetsClear(range) {
+  await gapi.client.sheets.spreadsheets.values.clear({ spreadsheetId:SHEET_ID, range });
+}
+
+async function getSheetNames() {
+  const r = await gapi.client.sheets.spreadsheets.get({ spreadsheetId:SHEET_ID });
+  return r.result.sheets.map(s => s.properties.title);
+}
+
+async function ensureSheets() {
+  const existing = await getSheetNames();
+  const needed   = Object.values(SHEET_NAMES);
+  const toCreate = needed.filter(n => !existing.includes(n));
+  if (toCreate.length === 0) return;
+  await gapi.client.sheets.spreadsheets.batchUpdate({
+    spreadsheetId: SHEET_ID,
+    resource: { requests: toCreate.map(t=>({ addSheet:{ properties:{ title:t } } })) }
+  });
+}
+
+// Tulis semua data siswa ke sheet Siswa
+async function pushSiswa() {
+  const rows = [['id','namaDepan','namaTengah','namaBelakang','kelas','usia','kota']];
+  siswa.forEach(s => rows.push([s.id,s.namaDepan,s.namaTengah,s.namaBelakang,s.kelas,s.usia||'',s.kota||'']));
+  await sheetsClear(SHEET_NAMES.siswa+'!A:Z');
+  await sheetsUpdate(SHEET_NAMES.siswa+'!A1', rows);
+}
+
+// Tulis semua data pelatih ke sheet Pelatih
+async function pushPelatih() {
+  const rows = [['id','nama','kelas','sertifikasi']];
+  pelatih.forEach(p => rows.push([p.id,p.nama,p.kelas||'',p.sertifikasi||'']));
+  await sheetsClear(SHEET_NAMES.pelatih+'!A:Z');
+  await sheetsUpdate(SHEET_NAMES.pelatih+'!A1', rows);
+}
+
+// Tulis data absensi ke sheet Absensi (format: siswaId | bulan | tgl | status)
+async function pushAttendance() {
+  const rows = [['siswaId','bulan','tanggal','status']];
+  for (const [bulan, byId] of Object.entries(attendance)) {
+    for (const [id, byTgl] of Object.entries(byId)) {
+      for (const [tgl, status] of Object.entries(byTgl)) {
+        rows.push([id, bulan, tgl, status]);
+      }
+    }
+  }
+  await sheetsClear(SHEET_NAMES.attendance+'!A:Z');
+  if (rows.length > 1) await sheetsUpdate(SHEET_NAMES.attendance+'!A1', rows);
+  else await sheetsUpdate(SHEET_NAMES.attendance+'!A1', [rows[0]]);
+}
+
+// Baca semua data dari Google Sheets
+async function pullFromSheets() {
+  try {
+    // Baca siswa
+    const sRows = await sheetsGet(SHEET_NAMES.siswa+'!A:G');
+    if (sRows.length > 1) {
+      siswa = sRows.slice(1).map(r => ({
+        id: parseInt(r[0])||Date.now(), namaDepan:r[1]||'', namaTengah:r[2]||'',
+        namaBelakang:r[3]||'', kelas:r[4]||'A', usia:r[5]?parseInt(r[5]):null, kota:r[6]||''
+      }));
+      lsSet(LS.siswa, siswa);
+    }
+
+    // Baca pelatih
+    const pRows = await sheetsGet(SHEET_NAMES.pelatih+'!A:D');
+    if (pRows.length > 1) {
+      pelatih = pRows.slice(1).map(r => ({
+        id:parseInt(r[0])||Date.now(), nama:r[1]||'', kelas:r[2]||'', sertifikasi:r[3]||''
+      }));
+      lsSet(LS.pelatih, pelatih);
+    }
+
+    // Baca absensi
+    const aRows = await sheetsGet(SHEET_NAMES.attendance+'!A:D');
+    if (aRows.length > 1) {
+      attendance = {};
+      aRows.slice(1).forEach(r => {
+        const [id,bulan,tgl,status] = r;
+        if (!id||!bulan||!tgl||!status) return;
+        if (!attendance[bulan]) attendance[bulan]={};
+        if (!attendance[bulan][id]) attendance[bulan][id]={};
+        attendance[bulan][id][tgl] = status;
+      });
+      lsSet(LS.attendance, attendance);
+    }
+  } catch(e) {
+    console.error('Pull error:', e);
+    throw e;
+  }
+}
+
+// Antrian sinkronisasi agar tidak spam API
+function scheduleSyncAll() {
+  if (!isSignedIn) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    setStatus('syncing','Menyimpan ke Google Sheets...');
+    try {
+      await Promise.all([pushSiswa(), pushPelatih(), pushAttendance()]);
+      setStatus('connected','Tersimpan di Google Sheets: '+new Date().toLocaleTimeString('id-ID'));
+    } catch(e) {
+      setStatus('error','Gagal sinkron: '+e.message);
+    }
+  }, 1500);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function namaLengkap(s){ return [s.namaDepan,s.namaTengah,s.namaBelakang].filter(Boolean).join(' '); }
+function getAtt(b,id){ return (attendance[b]||{})[id]||{}; }
+function totalHadir(b,id){ return Object.values(getAtt(b,id)).filter(v=>v==='hadir').length; }
+function totalHadirAll(id){ let t=0; for(const b of Object.keys(attendance)) t+=totalHadir(b,id); return t; }
+
+function setAtt(bulan,id,tgl,status) {
+  if (!attendance[bulan]) attendance[bulan]={};
+  if (!attendance[bulan][id]) attendance[bulan][id]={};
+  if (attendance[bulan][id][tgl]===status) delete attendance[bulan][id][tgl];
+  else attendance[bulan][id][tgl]=status;
+  lsSet(LS.attendance, attendance);
+  scheduleSyncAll();
+}
+
+function showToast(msg,type='') {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background = type==='ok'?'var(--green)':type==='err'?'var(--red)':'var(--navy)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+function showOverlay(title,msg){ document.getElementById('overlay').style.display='flex'; document.getElementById('overlayTitle').textContent=title; document.getElementById('overlayMsg').textContent=msg; }
+function hideOverlay(){ document.getElementById('overlay').style.display='none'; }
+
+function changeMonth(val) {
+  currentBulan=val; lsSet(LS.bulan,currentBulan);
+  renderAbsensi(); renderRekap();
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(name) {
+  ['absensi','rekap','siswa','pelatih'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = t===name?'':'none';
+  });
+  document.querySelectorAll('.nav-tab').forEach((el,i)=>{
+    el.classList.toggle('active',['absensi','rekap','siswa','pelatih'][i]===name);
+  });
+  if(name==='rekap') renderRekap();
+  if(name==='siswa') renderSiswa();
+  if(name==='pelatih') renderPelatih();
+}
+
+// ============================================================
+// RENDER ABSENSI
+// ============================================================
+function renderAbsensi() {
+  const fk=document.getElementById('filterKelas').value;
+  const dv=parseInt(document.getElementById('dayInput').value)||null;
+  const sr=document.getElementById('searchInput').value.toLowerCase();
+  const filt=siswa.filter(s=>{
+    if(fk!=='semua'&&s.kelas!==fk)return false;
+    if(sr&&!namaLengkap(s).toLowerCase().includes(sr))return false;
+    return true;
+  });
+
+  let hc=0,ic=0,sc=0,ac=0;
+  siswa.forEach(s=>{
+    const r=getAtt(currentBulan,s.id);
+    hc+=Object.values(r).filter(v=>v==='hadir').length;
+    ic+=Object.values(r).filter(v=>v==='izin').length;
+    sc+=Object.values(r).filter(v=>v==='sakit').length;
+    ac+=Object.values(r).filter(v=>v==='alpa').length;
+  });
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="stat-num c-blue">${siswa.length}</div><div class="stat-label">Total Siswa</div></div>
+    <div class="stat-card"><div class="stat-num c-green">${hc}</div><div class="stat-label">Total Hadir</div></div>
+    <div class="stat-card"><div class="stat-num c-amber">${ic}</div><div class="stat-label">Izin</div></div>
+    <div class="stat-card"><div class="stat-num c-purple">${sc}</div><div class="stat-label">Sakit</div></div>
+    <div class="stat-card"><div class="stat-num c-red">${ac}</div><div class="stat-label">Alpa</div></div>
+  `;
+  document.getElementById('absensiSubtitle').textContent=
+    dv?`${currentBulan} - Tgl ${dv} (${filt.length} siswa)`:`${currentBulan} (${filt.length} siswa)`;
+
+  const body=document.getElementById('absensiBody');
+  if(!filt.length){ body.innerHTML=`<tr><td colspan="5" class="empty-state"><div class="icon">🔍</div>Tidak ada siswa</td></tr>`; return; }
+  body.innerHTML=filt.map((s,i)=>{
+    const rec=getAtt(currentBulan,s.id);
+    const tot=totalHadir(currentBulan,s.id);
+    const sn=dv?(rec[dv]||null):null;
+    const mkBtn=(st,lbl)=>`<button class="att-btn ${sn===st?st:''}" onclick="clickAtt(${s.id},'${st}')" title="${st}">${lbl}</button>`;
+    return `<tr>
+      <td class="c" style="color:var(--text-muted)">${i+1}</td>
+      <td><div style="font-weight:600">${namaLengkap(s)}</div>${dv?'':'<div style="font-size:0.7rem;color:var(--text-muted)">Pilih tanggal dulu</div>'}</td>
+      <td class="c"><span class="bk bk-${s.kelas}">${s.kelas}</span></td>
+      <td class="c"><div style="display:flex;gap:5px;justify-content:center">
+        ${dv?mkBtn('hadir','H')+mkBtn('izin','I')+mkBtn('sakit','S')+mkBtn('alpa','A'):'<span style="font-size:0.73rem;color:var(--text-muted)">-</span>'}
+      </div></td>
+      <td class="c"><span class="total-badge">${tot}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function clickAtt(id,status) {
+  const dv=parseInt(document.getElementById('dayInput').value);
+  if(!dv){ showToast('Pilih tanggal terlebih dahulu!'); return; }
+  setAtt(currentBulan,id,dv,status);
+  renderAbsensi(); renderRekap();
+}
+
+// ============================================================
+// RENDER REKAP
+// ============================================================
+function renderRekap() {
+  const kArr=['A','B','C','D'];
+  const kCol={A:'#3a8fd4',B:'#16a34a',C:'#d97706',D:'#7c3aed'};
+  const kStat=kArr.map(k=>({
+    kelas:k, jml:siswa.filter(s=>s.kelas===k).length,
+    tot:siswa.filter(s=>s.kelas===k).reduce((a,s)=>a+totalHadir(currentBulan,s.id),0)
+  }));
+  document.getElementById('rekapKelasBody').innerHTML=kStat.map(ks=>{
+    const pct=ks.jml>0?Math.round((ks.tot/(ks.jml*31))*100):0;
+    return `<div class="rk-row"><div><div class="rn">Kelas ${ks.kelas} <span style="font-size:.73rem;color:var(--text-muted);font-weight:400">(${ks.jml} siswa)</span></div>
+    <div class="pb-bg"><div class="pb-fill" style="width:${pct}%;background:${kCol[ks.kelas]}"></div></div></div>
+    <div class="rv">${ks.tot}</div></div>`;
+  }).join('');
+  const top5=[...siswa].map(s=>({...s,tot:totalHadir(currentBulan,s.id)})).sort((a,b)=>b.tot-a.tot).slice(0,5);
+  document.getElementById('rekapTopSiswa').innerHTML=top5.map((s,i)=>`
+    <div class="rk-row"><div class="rn">${i+1}. ${namaLengkap(s)} <span class="bk bk-${s.kelas}" style="margin-left:4px">${s.kelas}</span></div>
+    <div class="rv">${s.tot}</div></div>`).join('');
+  const mx=Math.max(...kStat.map(k=>k.tot),1);
+  document.getElementById('chartBars').innerHTML=kStat.map(ks=>`
+    <div class="cb-wrap"><div class="cb-val">${ks.tot}</div>
+    <div class="cb" style="height:${Math.round((ks.tot/mx)*80)}px;background:${kCol[ks.kelas]}"></div>
+    <div class="cb-label">Kelas ${ks.kelas}</div></div>`).join('');
+}
+
+// ============================================================
+// RENDER SISWA
+// ============================================================
+function renderSiswa() {
+  const fk=document.getElementById('filterKelasS').value;
+  const sr=document.getElementById('searchS').value.toLowerCase();
+  const filt=siswa.filter(s=>{
+    if(fk!=='semua'&&s.kelas!==fk)return false;
+    if(sr&&!namaLengkap(s).toLowerCase().includes(sr))return false;
+    return true;
+  });
+  document.getElementById('siswaCount').textContent=`${filt.length} siswa`;
+  const body=document.getElementById('siswaBody');
+  if(!filt.length){ body.innerHTML=`<tr><td colspan="7" class="empty-state"><div class="icon">👤</div>Tidak ada siswa</td></tr>`; return; }
+  body.innerHTML=filt.map((s,i)=>`<tr>
+    <td class="c" style="color:var(--text-muted)">${i+1}</td>
+    <td style="font-weight:600">${namaLengkap(s)}</td>
+    <td class="c"><span class="bk bk-${s.kelas}">${s.kelas}</span></td>
+    <td class="c">${s.usia||'-'}</td>
+    <td class="c" style="font-size:.79rem;color:var(--text-muted)">${s.kota||'-'}</td>
+    <td class="c"><span class="total-badge">${totalHadirAll(s.id)}</span></td>
+    <td class="c"><button class="btn-danger" onclick="hapusSiswa(${s.id})">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button></td></tr>`).join('');
+}
+
+function tambahSiswa() {
+  const nd=document.getElementById('newNamaDepan').value.trim().toUpperCase();
+  const nt=document.getElementById('newNamaTengah').value.trim().toUpperCase();
+  const nb=document.getElementById('newNamaBelakang').value.trim().toUpperCase();
+  const kl=document.getElementById('newKelas').value;
+  if(!nd||!kl){ showToast('Nama depan dan kelas wajib diisi!'); return; }
+  siswa.push({id:Date.now(),namaDepan:nd,namaTengah:nt,namaBelakang:nb,kelas:kl,usia:null,kota:''});
+  lsSet(LS.siswa,siswa);
+  scheduleSyncAll();
+  ['newNamaDepan','newNamaTengah','newNamaBelakang','newKelas'].forEach(id=>document.getElementById(id).value='');
+  renderSiswa();
+  showToast(`Siswa "${nd}" ditambahkan!`,'ok');
+}
+
+function hapusSiswa(id) {
+  const s=siswa.find(x=>x.id===id);
+  if(!confirm(`Hapus ${namaLengkap(s)}?`)) return;
+  siswa=siswa.filter(x=>x.id!==id);
+  lsSet(LS.siswa,siswa);
+  scheduleSyncAll();
+  renderSiswa(); renderAbsensi();
+  showToast('Siswa dihapus.');
+}
+
+// ============================================================
+// RENDER PELATIH
+// ============================================================
+function renderPelatih() {
+  document.getElementById('pelatihGrid').innerHTML=pelatih.map(p=>`
+    <div class="pelatih-card">
+      <div class="p-avatar">${p.nama.charAt(0)}</div>
+      <div style="flex:1"><div class="p-name">${p.nama}</div>
+      <div class="p-sub">${p.kelas?'Kelas: '+p.kelas:'Belum ditugaskan'}</div>
+      ${p.sertifikasi?`<div class="p-sub">🏅 ${p.sertifikasi}</div>`:''}</div>
+      <button class="btn-danger" onclick="hapusPelatih(${p.id})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function tambahPelatih() {
+  const nm=document.getElementById('newPelatihNama').value.trim();
+  if(!nm){ showToast('Nama pelatih wajib diisi!'); return; }
+  pelatih.push({id:Date.now(),nama:nm,kelas:document.getElementById('newPelatihKelas').value.trim(),sertifikasi:document.getElementById('newPelatihSertif').value.trim()});
+  lsSet(LS.pelatih,pelatih);
+  scheduleSyncAll();
+  ['newPelatihNama','newPelatihKelas','newPelatihSertif'].forEach(id=>document.getElementById(id).value='');
+  renderPelatih();
+  showToast(`Pelatih "${nm}" ditambahkan!`,'ok');
+}
+
+function hapusPelatih(id) {
+  const p=pelatih.find(x=>x.id===id);
+  if(!confirm(`Hapus pelatih ${p.nama}?`)) return;
+  pelatih=pelatih.filter(x=>x.id!==id);
+  lsSet(LS.pelatih,pelatih);
+  scheduleSyncAll();
+  renderPelatih();
+  showToast('Pelatih dihapus.');
+}
+
+function renderAll(){ renderAbsensi(); }
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  document.getElementById('todayBadge').textContent=
+    new Date().toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('monthSelect').value=currentBulan;
+  renderAbsensi();
+}
+
+init();
+</script>
+
+<!-- Load Google API async -->
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script async defer src="https://accounts.google.com/gsi/client"></script>
+
+</body>
+</html>
